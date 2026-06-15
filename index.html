@@ -1,1 +1,646 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Golf Academy Booking System v2</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root {
+      --bg: #f6f2ea;
+      --card: #fffdf8;
+      --green: #173c26;
+      --green2: #2d5a3a;
+      --line: #06c755;
+      --gold: #b28a57;
+      --muted: #746d63;
+      --border: #e3d6c4;
+      --soft: #eef4ec;
+      --danger: #b24545;
+      --warning: #a66a18;
+      --shadow: 0 14px 40px rgba(42, 50, 36, 0.10);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", sans-serif;
+      color: var(--green);
+      background:
+        radial-gradient(circle at 100% 0%, rgba(83, 122, 87, .15), transparent 28%),
+        radial-gradient(circle at 0% 100%, rgba(178, 138, 87, .14), transparent 24%),
+        var(--bg);
+    }
+    .app { max-width: 520px; margin: 0 auto; min-height: 100vh; padding: 18px 16px 92px; }
+    .hero { padding: 18px 4px 8px; }
+    .brand { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .logo { display:flex; align-items:center; gap:10px; }
+    .logoMark { width:42px; height:42px; border-radius:50%; background:#eaf1e8; display:grid; place-items:center; border:1px solid var(--border); font-size:22px; }
+    .eyebrow { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; }
+    h1 { margin: 10px 0 6px; font-size: 30px; line-height: 1.08; letter-spacing: -.7px; }
+    .subtitle { color: var(--muted); font-size: 14px; line-height:1.55; }
+    .badge { display:inline-flex; gap:6px; align-items:center; border:1px solid var(--border); border-radius:999px; padding:8px 11px; background:rgba(255,255,255,.58); color: var(--muted); font-size:12px; }
+    .demoBadge { color: var(--warning); background:#fff7ea; border-color:#ead1aa; }
+    .card { background: rgba(255,253,248,.92); border:1px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 14px 0; box-shadow: var(--shadow); }
+    .profile { display:flex; align-items:center; gap:14px; }
+    .avatar { width: 56px; height:56px; border-radius:50%; background:#dfe9dc; object-fit:cover; }
+    .name { font-weight:800; font-size:18px; }
+    .sub { color: var(--muted); font-size:13px; line-height:1.5; }
+    .hoursBox { display:flex; justify-content:space-between; align-items:center; background: linear-gradient(135deg, #fff, #edf4eb); }
+    .hoursNumber { font-size: 40px; font-weight:900; letter-spacing:-1px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .serviceCard { min-height: 138px; display:flex; flex-direction:column; justify-content:space-between; cursor:pointer; transition:.18s ease; }
+    .serviceCard:active { transform: scale(.98); }
+    .serviceIcon { width:44px; height:44px; border-radius:16px; background:var(--soft); display:grid; place-items:center; font-size:24px; }
+    .serviceTitle { font-size:17px; font-weight:900; margin-top:12px; }
+    .serviceText { color:var(--muted); font-size:13px; line-height:1.45; margin-top:4px; }
+    .sectionTitle { font-size: 20px; font-weight: 900; margin: 22px 4px 10px; letter-spacing:-.2px; }
+    .tabs { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(255,253,248,.92); backdrop-filter: blur(18px); border-top:1px solid var(--border); display:flex; justify-content:center; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); z-index:50; }
+    .tabWrap { max-width:520px; width:100%; display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; }
+    .tab { border:none; background:transparent; color:var(--muted); border-radius:16px; padding:10px 4px; font-size:12px; font-weight:750; display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .tab.active { background:var(--green); color:white; }
+    .view { display:none; }
+    .view.active { display:block; }
+    .btn { width:100%; border:none; border-radius:16px; padding:14px 16px; color:white; background:var(--green); font-size:16px; font-weight:850; cursor:pointer; }
+    .btn.secondary { background:#edf4ec; color:var(--green); border:1px solid #d1e1d0; }
+    .btn.line { background: var(--line); color:white; }
+    .btn.danger { background: #fff1f1; color: var(--danger); border:1px solid #f0cccc; }
+    .btn:disabled { opacity:.45; cursor:not-allowed; }
+    .chipRow { display:flex; gap:8px; overflow:auto; padding:2px 0 6px; -webkit-overflow-scrolling:touch; }
+    .chip { flex:0 0 auto; border:1px solid var(--border); background: var(--card); color:var(--green); border-radius:999px; padding:11px 14px; font-size:14px; font-weight:800; cursor:pointer; }
+    .chip.active { background:var(--green); color:white; border-color:var(--green); }
+    .slot { border:1px solid var(--border); background:white; border-radius:18px; padding:14px; margin:10px 0; display:flex; justify-content:space-between; align-items:center; gap:12px; cursor:pointer; }
+    .slot.active { border-color:var(--green); background:#eef6ee; }
+    .slotTime { font-size:18px; font-weight:900; }
+    .pill { font-size:12px; padding:7px 10px; border-radius:999px; background:#eef7f0; color:#1e6b31; font-weight:800; white-space:nowrap; }
+    .statusPill { font-size:12px; padding:5px 9px; border-radius:999px; background:#edf4ec; color:var(--green); font-weight:800; display:inline-block; }
+    .statusPill.requested { background:#fff7e9; color:#9a5b00; }
+    .statusPill.cancelled { background:#fff0f0; color:var(--danger); }
+    .formGroup { margin: 13px 0; }
+    label { display:block; color:var(--muted); font-size:13px; font-weight:800; margin-bottom:7px; }
+    input, select, textarea { width:100%; border:1px solid var(--border); background:white; color:var(--green); border-radius:16px; padding:13px 14px; font-size:15px; font-family:inherit; outline:none; }
+    textarea { min-height:86px; resize:vertical; }
+    .summary { background:#f5f1e9; border:1px dashed #d9c7aa; border-radius:20px; padding:14px; line-height:1.8; color:var(--green); }
+    .message { display:none; padding:14px 16px; border-radius:18px; margin:12px 0; font-size:14px; line-height:1.55; }
+    .message.success { display:block; background:#effaf1; border:1px solid #bee6c4; color:#135222; }
+    .message.error { display:block; background:#fff2f2; border:1px solid #efc6c6; color:#872929; }
+    .message.info { display:block; background:#fff8ea; border:1px solid #ead7b0; color:#6f4a11; }
+    .bookingItem { border-top:1px solid var(--border); padding:14px 0; }
+    .bookingItem:first-child { border-top:none; padding-top:0; }
+    .row { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .muted { color:var(--muted); }
+    .small { font-size:12px; }
+    .loading { padding:40px 20px; text-align:center; color:var(--muted); line-height:1.7; }
+    .empty { text-align:center; color:var(--muted); padding:24px 12px; }
+    .classCard { border-top:1px solid var(--border); padding:14px 0; }
+    .classCard:first-child { border-top:none; padding-top:0; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="hero">
+      <div class="brand">
+        <div class="logo">
+          <div class="logoMark">⛳</div>
+          <div>
+            <div class="eyebrow" id="brandName">Golf Academy</div>
+            <div class="sub">LINE OA Booking System v2</div>
+          </div>
+        </div>
+        <div class="badge demoBadge" id="modeBadge">DEMO MODE</div>
+      </div>
+      <h1>จอง Simulator และทดลองเรียนผ่าน LINE</h1>
+      <div class="subtitle">เหมาะสำหรับ Golf Academy ที่ต้องการลดงานตอบแชท และให้ลูกค้าจองเองได้ง่ายขึ้น</div>
+    </div>
 
+    <div id="loading" class="loading">กำลังโหลดระบบ...</div>
+
+    <div id="main" style="display:none;">
+      <div id="globalMessage" class="message"></div>
+
+      <section id="homeView" class="view active">
+        <div class="card profile">
+          <img class="avatar" id="avatar" alt="profile" />
+          <div>
+            <div class="name" id="displayName">Demo Customer</div>
+            <div class="sub" id="userIdText">LINE User</div>
+          </div>
+        </div>
+
+        <div class="card hoursBox">
+          <div>
+            <div class="sub">ชั่วโมงคงเหลือ</div>
+            <div class="muted small">Demo Simulator / Lesson Package</div>
+          </div>
+          <div><span class="hoursNumber" id="hoursNumber">-</span> <span class="sub">ชม.</span></div>
+        </div>
+
+        <div class="sectionTitle">เลือกบริการ</div>
+        <div class="grid">
+          <div class="card serviceCard" onclick="showView('simulator')">
+            <div>
+              <div class="serviceIcon">🏌️</div>
+              <div class="serviceTitle">จอง Simulator</div>
+              <div class="serviceText">เลือกวันที่ เวลา และระยะเวลา 1–3 ชั่วโมง</div>
+            </div>
+            <div class="sub">ระบบเช็กเวลาว่างแบบ real-time →</div>
+          </div>
+          <div class="card serviceCard" onclick="showView('trial')">
+            <div>
+              <div class="serviceIcon">👨‍🏫</div>
+              <div class="serviceTitle">ทดลองเรียนกับ Pro</div>
+              <div class="serviceText">ส่งคำขอทดลองเรียน รอแอดมินยืนยัน</div>
+            </div>
+            <div class="sub">เหมาะสำหรับ lead ใหม่ →</div>
+          </div>
+          <div class="card serviceCard" onclick="showView('classes')">
+            <div>
+              <div class="serviceIcon">📅</div>
+              <div class="serviceTitle">คลาสประจำ</div>
+              <div class="serviceText">ดูคลาสที่เปิดจองจากตารางรายสัปดาห์</div>
+            </div>
+            <div class="sub">Generate จาก template →</div>
+          </div>
+          <div class="card serviceCard" onclick="showView('bookings')">
+            <div>
+              <div class="serviceIcon">✅</div>
+              <div class="serviceTitle">การจองของฉัน</div>
+              <div class="serviceText">ดูสถานะ booking และ trial request</div>
+            </div>
+            <div class="sub">จัดการเองใน LINE →</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="simulatorView" class="view">
+        <div class="sectionTitle">จองห้อง Simulator</div>
+        <div class="card">
+          <label>1) เลือกระยะเวลา</label>
+          <div class="chipRow" id="durationChips"></div>
+
+          <label style="margin-top:14px;">2) เลือกวันที่</label>
+          <div class="chipRow" id="dateChips"></div>
+
+          <label style="margin-top:14px;">3) เลือกเวลาที่ว่าง</label>
+          <div id="availabilityList" class="sub">เลือกระยะเวลาและวันที่ก่อน</div>
+        </div>
+
+        <div class="card" id="simSummaryCard" style="display:none;">
+          <div class="sectionTitle" style="margin-top:0;">ยืนยันการจอง</div>
+          <div class="summary" id="simSummary"></div>
+          <button class="btn" id="confirmSimBtn" onclick="confirmSimulatorBooking()" style="margin-top:14px;">ยืนยันการจอง</button>
+        </div>
+      </section>
+
+      <section id="trialView" class="view">
+        <div class="sectionTitle">ทดลองเรียนกับ Pro</div>
+        <div class="card">
+          <div class="sub">ส่งคำขอทดลองเรียน แอดมินจะติดต่อกลับเพื่อยืนยันวัน เวลา และ Pro ที่เหมาะสม</div>
+
+          <div class="formGroup">
+            <label>เป้าหมายการเรียน</label>
+            <select id="trialGoal">
+              <option>มือใหม่ อยากเริ่มเรียน</option>
+              <option>อยากแก้สวิง</option>
+              <option>อยากเพิ่มระยะ</option>
+              <option>อยากออกรอบดีขึ้น</option>
+              <option>สำหรับเด็ก / Junior</option>
+              <option>ยังไม่แน่ใจ ให้ Pro แนะนำ</option>
+            </select>
+          </div>
+
+          <div class="formGroup">
+            <label>ช่วงเวลาที่สะดวก</label>
+            <select id="trialPreferred">
+              <option>วันธรรมดาช่วงเช้า</option>
+              <option>วันธรรมดาช่วงบ่าย</option>
+              <option>วันธรรมดาช่วงเย็น</option>
+              <option>เสาร์-อาทิตย์ช่วงเช้า</option>
+              <option>เสาร์-อาทิตย์ช่วงบ่าย</option>
+            </select>
+          </div>
+
+          <div class="formGroup">
+            <label>เบอร์โทร</label>
+            <input id="trialPhone" placeholder="08X-XXX-XXXX" inputmode="tel" />
+          </div>
+
+          <div class="formGroup">
+            <label>ระดับการเล่น</label>
+            <select id="trialLevel">
+              <option>ไม่เคยเล่น / มือใหม่</option>
+              <option>เล่นมาบ้างแล้ว</option>
+              <option>มี Handicap</option>
+              <option>ต้องการให้ Pro ประเมิน</option>
+            </select>
+          </div>
+
+          <div class="formGroup">
+            <label>หมายเหตุเพิ่มเติม</label>
+            <textarea id="trialNote" placeholder="เช่น มีอุปกรณ์แล้ว / อยากเรียนกับเพื่อน / สะดวกวันไหนเป็นพิเศษ"></textarea>
+          </div>
+
+          <button class="btn" onclick="submitTrialRequest()">ส่งคำขอทดลองเรียน</button>
+        </div>
+      </section>
+
+      <section id="classesView" class="view">
+        <div class="sectionTitle">คลาสประจำที่เปิดจอง</div>
+        <div class="card">
+          <div id="classList" class="sub">กำลังโหลดคลาส...</div>
+        </div>
+      </section>
+
+      <section id="bookingsView" class="view">
+        <div class="sectionTitle">การจองของฉัน</div>
+        <div class="card">
+          <div id="bookingList" class="empty">ยังไม่มีรายการจอง</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tabWrap">
+      <button class="tab active" data-tab="home" onclick="showView('home')"><span>🏠</span><span>หน้าแรก</span></button>
+      <button class="tab" data-tab="simulator" onclick="showView('simulator')"><span>🏌️</span><span>Simulator</span></button>
+      <button class="tab" data-tab="trial" onclick="showView('trial')"><span>👨‍🏫</span><span>Trial</span></button>
+      <button class="tab" data-tab="bookings" onclick="showView('bookings')"><span>✅</span><span>ของฉัน</span></button>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      DEMO_MODE: true,
+      LIFF_ID: 'YOUR_LIFF_ID',
+      GAS_WEB_APP_URL: 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRKYxESB0IWi8J-RabrcCt-pzN00vWDUOJRn8ugVU0nZCYMatKm-RLWrDbBWSWdh7IwD9MqHKLcTqDC7wNRRJhH2RdCcpAoakY51QokUNZoxWrzuV5IZ4VWi5vylj69DOcVWwn9oTVmXdalobYiZ4mmFWUbvqsvqk9dswI7qkTNlDBoYpDXHbJd1nOQ1fVf0gbt9aVGUL_HYQ5DGRDEAholkQ-Z3dODIQjszWyhiCRFu8nt4trU5win1-l2TlmskacAGZYbqmmpwrfM9ejnaf_hJUZ24A&lib=M_CLWsXnPrTHnsWpyc7T5BQj0Lhh5Ov-u',
+      BRAND_NAME: 'INZONE Golf Demo'
+    };
+
+    let currentProfile = null;
+    let appState = {
+      hours: 10,
+      bookings: [],
+      classSlots: [],
+      selectedDuration: 120,
+      selectedDate: toDateString(new Date()),
+      selectedSlot: null
+    };
+
+    const demoStore = {
+      bookings: [
+        { booking_id:'DEMO-BKG-001', booking_type:'simulator', service_name:'Simulator Booking', booking_date:toDateString(addDays(new Date(), 1)), start_time:'10:00', end_time:'11:00', resource_name:'Simulator Room 1', hours_used:1, booking_status:'Confirmed', created_at: new Date().toISOString() },
+        { booking_id:'DEMO-BKG-002', booking_type:'simulator', service_name:'Simulator Booking', booking_date:toDateString(addDays(new Date(), 1)), start_time:'13:00', end_time:'15:00', resource_name:'Simulator Room 2', hours_used:2, booking_status:'Confirmed', created_at: new Date().toISOString() }
+      ],
+      hours: 10,
+      trialRequests: [],
+      classSlots: [
+        { slot_id:'SLOT-001', class_name:'Junior Golf Class', pro_name:'Pro May', class_date:toDateString(addDays(new Date(), 3)), start_time:'10:00', end_time:'11:30', capacity:6, booked_count:3, available:3, hours_required:1.5, status:'Open' },
+        { slot_id:'SLOT-002', class_name:'Swing Basic Group', pro_name:'Pro Anan', class_date:toDateString(addDays(new Date(), 5)), start_time:'13:00', end_time:'14:30', capacity:4, booked_count:2, available:2, hours_required:1.5, status:'Open' },
+        { slot_id:'SLOT-003', class_name:'Short Game Clinic', pro_name:'Pro Bank', class_date:toDateString(addDays(new Date(), 7)), start_time:'18:00', end_time:'19:00', capacity:4, booked_count:1, available:3, hours_required:1, status:'Open' }
+      ]
+    };
+
+    async function main() {
+      document.getElementById('brandName').textContent = CONFIG.BRAND_NAME;
+      try {
+        if (CONFIG.DEMO_MODE) {
+          currentProfile = {
+            userId: 'DEMO-LINE-USER',
+            displayName: 'Demo Customer',
+            pictureUrl: ''
+          };
+          document.getElementById('modeBadge').textContent = 'DEMO MODE';
+        } else {
+          document.getElementById('modeBadge').textContent = 'LIVE LIFF';
+          await initLiff();
+          currentProfile = await liff.getProfile();
+        }
+
+        renderProfile();
+        const initial = await api('getInitialData', { profile: currentProfile });
+        if (initial.brand_name) document.getElementById('brandName').textContent = initial.brand_name;
+        appState.hours = initial.hours?.remaining_hours ?? demoStore.hours;
+        appState.bookings = initial.bookings?.bookings || [];
+        appState.classSlots = initial.class_slots || demoStore.classSlots;
+        renderAll();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('main').style.display = 'block';
+      } catch (err) {
+        document.getElementById('loading').innerHTML = `<div class="message error" style="display:block;"><strong>โหลดระบบไม่สำเร็จ</strong><br>${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    async function initLiff() {
+      if (typeof liff === 'undefined') throw new Error('ไม่พบ LIFF SDK');
+      await liff.init({ liffId: CONFIG.LIFF_ID, withLoginOnExternalBrowser: true });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        throw new Error('Redirecting to LINE Login');
+      }
+    }
+
+    function renderProfile() {
+      document.getElementById('displayName').textContent = currentProfile.displayName || '-';
+      document.getElementById('userIdText').textContent = currentProfile.userId || '-';
+      const avatar = document.getElementById('avatar');
+      avatar.src = currentProfile.pictureUrl || 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="#dfe9dc"/><text x="50%" y="54%" text-anchor="middle" font-size="46">⛳</text></svg>');
+    }
+
+    function renderAll() {
+      document.getElementById('hoursNumber').textContent = formatNumber(appState.hours);
+      renderDurationChips();
+      renderDateChips();
+      loadAvailability();
+      renderBookings();
+      renderClasses();
+    }
+
+    function showView(viewName) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(viewName + 'View').classList.add('active');
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === viewName));
+      if (viewName === 'bookings') refreshBookings();
+      if (viewName === 'classes') refreshClasses();
+    }
+
+    function renderDurationChips() {
+      const container = document.getElementById('durationChips');
+      container.innerHTML = '';
+      [60, 120, 180].forEach(min => {
+        const el = document.createElement('button');
+        el.className = 'chip' + (appState.selectedDuration === min ? ' active' : '');
+        el.textContent = (min / 60) + ' ชั่วโมง';
+        el.onclick = () => { appState.selectedDuration = min; appState.selectedSlot = null; renderAll(); };
+        container.appendChild(el);
+      });
+    }
+
+    function renderDateChips() {
+      const container = document.getElementById('dateChips');
+      container.innerHTML = '';
+      const dates = [0,1,2,3,4,5,6].map(offset => addDays(new Date(), offset));
+      dates.forEach((date, idx) => {
+        const dateStr = toDateString(date);
+        const el = document.createElement('button');
+        el.className = 'chip' + (appState.selectedDate === dateStr ? ' active' : '');
+        el.textContent = idx === 0 ? 'วันนี้' : idx === 1 ? 'พรุ่งนี้' : thaiShortDate(date);
+        el.onclick = () => { appState.selectedDate = dateStr; appState.selectedSlot = null; renderAll(); };
+        container.appendChild(el);
+      });
+    }
+
+    async function loadAvailability() {
+      const container = document.getElementById('availabilityList');
+      container.innerHTML = 'กำลังคำนวณเวลาว่าง...';
+      try {
+        const res = await api('getSimulatorAvailability', {
+          date: appState.selectedDate,
+          durationMinutes: appState.selectedDuration
+        });
+        const slots = res.slots || [];
+        if (slots.length === 0) {
+          container.innerHTML = '<div class="empty">ไม่มีเวลาว่างที่ต่อเนื่องครบตามระยะเวลาที่เลือก</div>';
+          document.getElementById('simSummaryCard').style.display = 'none';
+          return;
+        }
+        container.innerHTML = '';
+        slots.forEach(slot => {
+          const el = document.createElement('div');
+          el.className = 'slot' + (appState.selectedSlot && appState.selectedSlot.start_time === slot.start_time ? ' active' : '');
+          el.innerHTML = `<div><div class="slotTime">${slot.start_time}–${slot.end_time}</div><div class="sub">${appState.selectedDuration / 60} ชั่วโมง</div></div><div class="pill">ว่าง ${slot.available_count} ห้อง</div>`;
+          el.onclick = () => { appState.selectedSlot = slot; renderSimSummary(); };
+          container.appendChild(el);
+        });
+      } catch (err) {
+        container.innerHTML = `<div class="message error" style="display:block;">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    function renderSimSummary() {
+      document.querySelectorAll('.slot').forEach(el => el.classList.remove('active'));
+      if (!appState.selectedSlot) return;
+      const s = appState.selectedSlot;
+      const remainingAfter = appState.hours - (appState.selectedDuration / 60);
+      document.getElementById('simSummaryCard').style.display = 'block';
+      document.getElementById('simSummary').innerHTML = `
+        <strong>Simulator Booking</strong><br>
+        วันที่: ${formatThaiDate(s.date)}<br>
+        เวลา: ${s.start_time}–${s.end_time}<br>
+        ระยะเวลา: ${appState.selectedDuration / 60} ชั่วโมง<br>
+        ห้อง: ระบบจัดห้องว่างให้อัตโนมัติ<br>
+        ใช้ชั่วโมง: ${appState.selectedDuration / 60} ชั่วโมง<br>
+        คงเหลือหลังจอง: ${formatNumber(remainingAfter)} ชั่วโมง
+      `;
+    }
+
+    async function confirmSimulatorBooking() {
+      if (!appState.selectedSlot) return;
+      const btn = document.getElementById('confirmSimBtn');
+      btn.disabled = true;
+      btn.textContent = 'กำลังจอง...';
+      try {
+        const res = await api('createSimulatorBooking', {
+          lineUserId: currentProfile.userId,
+          date: appState.selectedDate,
+          startTime: appState.selectedSlot.start_time,
+          durationMinutes: appState.selectedDuration
+        });
+        if (!res.success) throw new Error(res.message || 'จองไม่สำเร็จ');
+        appState.hours = res.remaining_hours ?? (appState.hours - appState.selectedDuration / 60);
+        appState.bookings = res.bookings || appState.bookings;
+        appState.selectedSlot = null;
+        showMessage('จองห้อง Simulator สำเร็จ ระบบส่งรายละเอียดเข้า LINE แล้ว', 'success');
+        renderAll();
+        showView('bookings');
+      } catch (err) {
+        showMessage(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'ยืนยันการจอง';
+      }
+    }
+
+    async function submitTrialRequest() {
+      const trial = {
+        goal: document.getElementById('trialGoal').value,
+        preferred_time: document.getElementById('trialPreferred').value,
+        phone: document.getElementById('trialPhone').value,
+        playing_level: document.getElementById('trialLevel').value,
+        note: document.getElementById('trialNote').value
+      };
+      if (!trial.phone.trim()) {
+        showMessage('กรุณากรอกเบอร์โทรก่อนส่งคำขอ', 'error');
+        return;
+      }
+      try {
+        const res = await api('createTrialRequest', { lineUserId: currentProfile.userId, trial });
+        if (!res.success) throw new Error(res.message || 'ส่งคำขอไม่สำเร็จ');
+        showMessage('ส่งคำขอทดลองเรียนเรียบร้อย แอดมินจะติดต่อกลับเพื่อยืนยัน', 'success');
+        document.getElementById('trialPhone').value = '';
+        document.getElementById('trialNote').value = '';
+        await refreshBookings();
+        showView('bookings');
+      } catch (err) {
+        showMessage(err.message, 'error');
+      }
+    }
+
+    async function refreshBookings() {
+      const res = await api('getMyBookings', { lineUserId: currentProfile.userId });
+      appState.bookings = res.bookings || [];
+      renderBookings();
+    }
+
+    async function refreshClasses() {
+      const res = await api('getClassSlots', {});
+      appState.classSlots = res.class_slots || appState.classSlots;
+      renderClasses();
+    }
+
+    function renderBookings() {
+      const container = document.getElementById('bookingList');
+      const bookings = appState.bookings || [];
+      if (!bookings.length) {
+        container.innerHTML = '<div class="empty">ยังไม่มีรายการจอง</div>';
+        return;
+      }
+      container.innerHTML = bookings.map(b => {
+        const statusClass = String(b.booking_status || '').toLowerCase();
+        const title = b.booking_type === 'trial_lesson' ? 'ทดลองเรียนกับ Pro' : b.booking_type === 'class_lesson' ? b.service_name : 'จองห้อง Simulator';
+        const meta = b.booking_type === 'trial_lesson'
+          ? `เป้าหมาย: ${escapeHtml(b.goal || '-')}<br>ช่วงเวลาที่สะดวก: ${escapeHtml(b.preferred_time || '-')}`
+          : `${formatThaiDate(b.booking_date)} ${escapeHtml(b.start_time)}–${escapeHtml(b.end_time)}<br>${escapeHtml(b.resource_name || b.coach_name || '')}`;
+        return `<div class="bookingItem"><div class="row"><strong>${escapeHtml(title)}</strong><span class="statusPill ${statusClass}">${escapeHtml(b.booking_status || '-')}</span></div><div class="sub" style="margin-top:6px;">${meta}</div></div>`;
+      }).join('');
+    }
+
+    function renderClasses() {
+      const container = document.getElementById('classList');
+      const slots = appState.classSlots || [];
+      if (!slots.length) {
+        container.innerHTML = '<div class="empty">ยังไม่มีคลาสที่เปิดจอง</div>';
+        return;
+      }
+      container.innerHTML = slots.map(s => `
+        <div class="classCard">
+          <div class="row"><strong>${escapeHtml(s.class_name)}</strong><span class="pill">ว่าง ${s.available}/${s.capacity}</span></div>
+          <div class="sub" style="margin-top:6px;">${formatThaiDate(s.class_date)} ${escapeHtml(s.start_time)}–${escapeHtml(s.end_time)}<br>Pro: ${escapeHtml(s.pro_name)} | ใช้ ${s.hours_required} ชั่วโมง</div>
+          <button class="btn secondary" style="margin-top:12px;" onclick="bookClass('${escapeHtml(s.slot_id)}')">จองคลาสนี้</button>
+        </div>
+      `).join('');
+    }
+
+    async function bookClass(slotId) {
+      try {
+        const res = await api('createClassBooking', { lineUserId: currentProfile.userId, slotId });
+        if (!res.success) throw new Error(res.message || 'จองคลาสไม่สำเร็จ');
+        appState.hours = res.remaining_hours ?? appState.hours;
+        showMessage('จองคลาสสำเร็จ', 'success');
+        await refreshBookings();
+        await refreshClasses();
+        showView('bookings');
+      } catch (err) { showMessage(err.message, 'error'); }
+    }
+
+    async function api(action, payload = {}) {
+      if (CONFIG.DEMO_MODE) return demoApi(action, payload);
+      const response = await fetch(CONFIG.GAS_WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...payload })
+      });
+      const data = await response.json();
+      if (!data.success && data.message) throw new Error(data.message);
+      return data;
+    }
+
+    async function demoApi(action, payload = {}) {
+      await sleep(180);
+      if (action === 'getInitialData') {
+        return {
+          success:true,
+          brand_name: CONFIG.BRAND_NAME,
+          hours: { remaining_hours: demoStore.hours },
+          bookings: { bookings: demoStore.bookings.concat(demoStore.trialRequests) },
+          class_slots: demoStore.classSlots
+        };
+      }
+      if (action === 'getSimulatorAvailability') {
+        return buildDemoAvailability(payload.date, payload.durationMinutes);
+      }
+      if (action === 'createSimulatorBooking') {
+        const availability = buildDemoAvailability(payload.date, payload.durationMinutes).slots;
+        const slot = availability.find(s => s.start_time === payload.startTime);
+        if (!slot) return { success:false, message:'เวลานี้ถูกจองไปแล้ว กรุณาเลือกเวลาใหม่' };
+        const hours = payload.durationMinutes / 60;
+        if (demoStore.hours < hours) return { success:false, message:'ชั่วโมงคงเหลือไม่พอ' };
+        demoStore.hours -= hours;
+        const b = { booking_id:'DEMO-BKG-' + Date.now(), booking_type:'simulator', service_name:'Simulator Booking', booking_date:payload.date, start_time:slot.start_time, end_time:slot.end_time, resource_name:slot.primary_resource_name, hours_used:hours, booking_status:'Confirmed', created_at: new Date().toISOString() };
+        demoStore.bookings.unshift(b);
+        return { success:true, booking:b, remaining_hours:demoStore.hours, bookings:demoStore.bookings.concat(demoStore.trialRequests) };
+      }
+      if (action === 'createTrialRequest') {
+        const existing = demoStore.trialRequests.some(t => ['Requested','Contacted','Confirmed'].includes(t.booking_status));
+        if (existing) return { success:false, message:'คุณมีคำขอทดลองเรียนที่ยังอยู่ระหว่างดำเนินการแล้ว' };
+        const t = { booking_id:'DEMO-TRL-' + Date.now(), booking_type:'trial_lesson', service_name:'Trial Lesson Request', goal:payload.trial.goal, preferred_time:payload.trial.preferred_time, booking_status:'Requested', created_at: new Date().toISOString() };
+        demoStore.trialRequests.unshift(t);
+        return { success:true, trial:t };
+      }
+      if (action === 'getMyBookings') {
+        return { success:true, bookings:demoStore.bookings.concat(demoStore.trialRequests) };
+      }
+      if (action === 'getClassSlots') {
+        return { success:true, class_slots: demoStore.classSlots };
+      }
+      if (action === 'createClassBooking') {
+        const slot = demoStore.classSlots.find(s => s.slot_id === payload.slotId);
+        if (!slot) return { success:false, message:'ไม่พบคลาสนี้' };
+        if (slot.available <= 0) return { success:false, message:'คลาสเต็มแล้ว' };
+        if (demoStore.hours < slot.hours_required) return { success:false, message:'ชั่วโมงคงเหลือไม่พอ' };
+        demoStore.hours -= Number(slot.hours_required || 1);
+        slot.booked_count += 1; slot.available -= 1;
+        demoStore.bookings.unshift({ booking_id:'DEMO-BKG-' + Date.now(), booking_type:'class_lesson', service_name:slot.class_name, booking_date:slot.class_date, start_time:slot.start_time, end_time:slot.end_time, coach_name:slot.pro_name, hours_used:slot.hours_required, booking_status:'Confirmed', created_at: new Date().toISOString() });
+        return { success:true, remaining_hours:demoStore.hours };
+      }
+      return { success:false, message:'Unknown demo action: ' + action };
+    }
+
+    function buildDemoAvailability(date, durationMinutes) {
+      const open = 9 * 60;
+      const close = 21 * 60;
+      const rooms = ['Simulator Room 1', 'Simulator Room 2', 'VIP Simulator Room'];
+      const bookingsForDate = demoStore.bookings.filter(b => b.booking_type === 'simulator' && b.booking_date === date && b.booking_status === 'Confirmed');
+      const slots = [];
+      for (let start = open; start + durationMinutes <= close; start += 60) {
+        const end = start + durationMinutes;
+        const availableRooms = rooms.filter(room => !bookingsForDate.some(b => b.resource_name === room && overlap(start, end, toMin(b.start_time), toMin(b.end_time))));
+        if (availableRooms.length) {
+          slots.push({ date, start_time: toTime(start), end_time: toTime(end), duration_minutes:durationMinutes, available_count: availableRooms.length, primary_resource_name: availableRooms[0] });
+        }
+      }
+      return { success:true, date, duration_minutes:durationMinutes, slots };
+    }
+
+    function showMessage(text, type='info') {
+      const el = document.getElementById('globalMessage');
+      el.textContent = text;
+      el.className = 'message ' + type;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => { el.className = 'message'; }, 5200);
+    }
+
+    function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
+    function toDateString(date) { return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0'); }
+    function thaiShortDate(date) { return date.toLocaleDateString('th-TH', { weekday:'short', day:'numeric' }); }
+    function formatThaiDate(dateStr) { if (!dateStr) return '-'; const [y,m,d] = String(dateStr).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' }); }
+    function toMin(t) { const [h,m] = String(t).split(':').map(Number); return h*60 + m; }
+    function toTime(min) { return String(Math.floor(min/60)).padStart(2,'0') + ':' + String(min%60).padStart(2,'0'); }
+    function overlap(aStart, aEnd, bStart, bEnd) { return aStart < bEnd && aEnd > bStart; }
+    function formatNumber(n) { return Number(n || 0).toLocaleString('th-TH', { maximumFractionDigits: 1 }); }
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+    main();
+  </script>
+</body>
+</html>
